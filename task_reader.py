@@ -1,81 +1,70 @@
-from abc import ABC, abstractmethod
+from task_names import BasicTaskNamesGetter
+from typing import Dict, List
+from pprint import pprint
 
 
-class AbstractTaskNamesGetter(ABC):
-    def __init__(self):
-        self.__task_names = []
+class TaskGetter:
+    def __init__(self, all_tasks: Dict, start: int, end: int):
+        self.all_tasks: Dict = all_tasks
+        self.start: int = start
+        self.end: int = end
+        self.task_range = end - start + 1
 
-    @abstractmethod
-    def __create_task_names__(self, task_names):
-        pass
+    def handle_line(self, line: List):
+        variant = int(line[0])
 
-    def get_task_names(self):
-        self.__create_task_names__(self.__task_names)
-        return self.__task_names
+        split_line = line[1:]
+        for temp_task_index in range(self.task_range):
+            temp_task = []
+            for increment in range(3):
+                index = temp_task_index * 3 + increment
+                temp_task.append(split_line[index])
 
+            if variant not in self.all_tasks.keys():
+                self.all_tasks[variant] = dict()
+            special_task: Dict = self.all_tasks[variant]
 
-class BasicTaskNamesGetter(AbstractTaskNamesGetter):
-    def __create_task_names__(self, task_names):
-        task_names += ['1_5', '6_9', '10_11']
-
-
-class AdvanceTaskNamesGetter(AbstractTaskNamesGetter):
-    def __create_task_names__(self, task_names):
-        flag_numbers = self.__get_flag_numbers__()
-
-        for i in range(len(flag_numbers)):
-            start = self.__get_start__(i, flag_numbers)
-            end = self.__get_end__(i, flag_numbers)
-
-            temp_task_name = "%d_%d" % (start, end)
-            task_names.append(temp_task_name)
-
-    @abstractmethod
-    def __get_flag_numbers__(self):
-        pass
-
-    @abstractmethod
-    def __get_start__(self, i, flag_numbers):
-        pass
-
-    @abstractmethod
-    def __get_end__(self, i, flag_numbers):
-        pass
+            real_task_index = temp_task_index + self.start
+            if real_task_index not in special_task.keys():
+                special_task[real_task_index] = temp_task
 
 
-class PrefixTaskNamesGetter(AdvanceTaskNamesGetter):
-    def __get_flag_numbers__(self):
-        return [5, 9, 11]
-
-    def __get_start__(self, i, flag_numbers):
-        if i == 0:
-            return 1
-        else:
-            return flag_numbers[i - 1] + 1
-
-    def __get_end__(self, i, flag_numbers):
-        return flag_numbers[i]
-
-
-class PostfixTaskNamesGetter(AdvanceTaskNamesGetter):
-    def __get_flag_numbers__(self):
-        return [1, 6, 10]
-
-    def __get_start__(self, i, flag_numbers):
-        return flag_numbers[i]
-
-    def __get_end__(self, i, flag_numbers):
-        if i == len(flag_numbers) - 1:
-            return 11
-        else:
-            return flag_numbers[i + 1] - 1
+def get_task_names():
+    task_names_creator = BasicTaskNamesGetter()
+    task_names = task_names_creator.get_task_names()
+    return task_names
 
 
 def main():
-    for task_name_class in [BasicTaskNamesGetter, PrefixTaskNamesGetter, PostfixTaskNamesGetter]:
-        task_names_getter = task_name_class()
-        task_names = task_names_getter.get_task_names()
-        print(*task_names)
+    task_names = get_task_names()
+
+    all_tasks: Dict = dict()
+
+    for task_name in task_names:
+        split_task_name = task_name.split('_')
+        start: int = int(split_task_name[0])
+        end: int = int(split_task_name[1])
+
+        task_file_name: str = "tasks/%s.txt" % task_name
+        with open(task_file_name, "r", encoding='utf-8') as file:
+            task_getter = TaskGetter(all_tasks, start, end)
+
+            lines = file.readlines()
+            for line in lines:
+                line = line.replace('\n', '')
+                split_line = line.split(' ')
+
+                if task_name == '10_11':
+                    half_len = len(split_line) // 2
+
+                    first_half = split_line[:half_len]
+                    second_half = split_line[half_len:]
+
+                    task_getter.handle_line(first_half)
+                    task_getter.handle_line(second_half)
+                else:
+                    task_getter.handle_line(split_line)
+    pprint(all_tasks)
 
 
 if __name__ == '__main__':
