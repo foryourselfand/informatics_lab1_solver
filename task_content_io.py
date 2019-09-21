@@ -1,6 +1,8 @@
-from task_name_creator import BasicTaskNamesGetter, AbstractTaskNamesGetter
+from abc import ABC, abstractmethod
+from task_name_creator import DirectoryTaskNamesGetter, BasicTaskNamesGetter, AbstractTaskNamesGetter
 from typing import Dict, List
 from pprint import pprint
+from config import get_task_name
 
 
 class TaskGetter:
@@ -29,20 +31,33 @@ class TaskGetter:
                 special_task[real_task_index] = temp_task
 
 
-class HardTaskReader:
-    def __init__(self, all_tasks: Dict, task_name_creator: AbstractTaskNamesGetter):
-        self.task_names = task_name_creator.get_task_names()
-        self.all_tasks: Dict = all_tasks
+class AbstractTaskReader(ABC):
+    def __init__(self):
+        self.__tasks__: Dict[int, Dict[int, List[str]]] = dict()
 
-    def read_task_content(self):
+    def get_tasks(self) -> Dict[int, Dict[int, List[str]]]:
+        self.__read_task_content__()
+        return self.__tasks__
+
+    @abstractmethod
+    def __read_task_content__(self):
+        pass
+
+
+class HardTaskReader(AbstractTaskReader):
+    def __init__(self, task_name_creator: AbstractTaskNamesGetter):
+        super().__init__()
+        self.task_names = task_name_creator.get_task_names()
+
+    def __read_task_content__(self):
         for task_name in self.task_names:
             split_task_name = task_name.split('_')
             start: int = int(split_task_name[0])
             end: int = int(split_task_name[1])
 
-            task_file_name: str = "tasks/%s.txt" % task_name
+            task_file_name: str = get_task_name(task_name)
             with open(task_file_name, "r", encoding='utf-8') as file:
-                task_getter = TaskGetter(self.all_tasks, start, end)
+                task_getter = TaskGetter(self.__tasks__, start, end)
 
                 lines = file.readlines()
                 for line in lines:
@@ -62,12 +77,12 @@ class HardTaskReader:
 
 
 def main():
-    all_tasks: Dict = dict()
-    names_creator: AbstractTaskNamesGetter = BasicTaskNamesGetter()
-    hard_task_reader = HardTaskReader(all_tasks, names_creator)
-    hard_task_reader.read_task_content()
+    names_creator: AbstractTaskNamesGetter = DirectoryTaskNamesGetter()
+    hard_task_reader = HardTaskReader(names_creator)
 
-    pprint(all_tasks)
+    tasks: Dict = hard_task_reader.get_tasks()
+
+    pprint(tasks)
 
 
 if __name__ == '__main__':

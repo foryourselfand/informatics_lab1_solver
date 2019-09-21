@@ -1,4 +1,8 @@
 from abc import ABC, abstractmethod
+from typing import List
+import os
+
+from config import tasks_dir_base
 
 
 class AbstractTaskNamesGetter(ABC):
@@ -17,6 +21,13 @@ class AbstractTaskNamesGetter(ABC):
 class BasicTaskNamesGetter(AbstractTaskNamesGetter):
     def __create_task_names__(self, task_names):
         task_names += ['1_5', '6_9', '10_11']
+
+
+class DirectoryTaskNamesGetter(AbstractTaskNamesGetter):
+    def __create_task_names__(self, task_names):
+        full_task_names: List = os.listdir(tasks_dir_base)
+        short_task_names: List = [task_name[:-4] for task_name in full_task_names]
+        task_names += reversed(short_task_names)
 
 
 class AdvanceTaskNamesGetter(AbstractTaskNamesGetter):
@@ -72,7 +83,8 @@ class PostfixTaskNamesGetter(AdvanceTaskNamesGetter):
 
 
 def main():
-    for task_name_class in [BasicTaskNamesGetter, PrefixTaskNamesGetter, PostfixTaskNamesGetter]:
+    for task_name_class in [BasicTaskNamesGetter, DirectoryTaskNamesGetter,
+                            PrefixTaskNamesGetter, PostfixTaskNamesGetter]:
         task_names_getter: AbstractTaskNamesGetter = task_name_class()
         task_names = task_names_getter.get_task_names()
         print(*task_names)
