@@ -2,6 +2,7 @@ from task_content_io import AbstractTaskReader, EasyTaskReader
 from typing import Dict
 from pprint import pprint
 from abc import ABC, abstractmethod
+from sys import argv
 
 
 class AbstractTranslator(ABC):
@@ -115,13 +116,37 @@ class FromAnyToDecimal(AbstractTranslator):
         return ord(letter) - ord('A') + 10
 
 
+class FromAnyToAny(AbstractTranslator):
+    def translate(self, input_number, from_num_sys, to_num_sys):
+        print("%s(%s) = ?(%s)" % (input_number, from_num_sys, to_num_sys))
+        number = str(input_number)
+        from_num_sys = int(from_num_sys)
+        to_num_sys = int(to_num_sys)
+
+        from_any_to_decimal = FromAnyToDecimal()
+        decimal_number = from_any_to_decimal.translate(number, from_num_sys, 10)
+
+        from_decimal_to_any = FromDecimalToAny()
+        result_number = from_decimal_to_any.translate(decimal_number, 10, to_num_sys)
+
+        print("{0}({1}) = {2}({3})".format(input_number, from_num_sys, result_number, to_num_sys))
+        print()
+        return result_number
+
+
 def main():
+    task_number = int(argv[1]) if len(argv) == 2 else 1
+
     task_reader: AbstractTaskReader = EasyTaskReader()
     tasks: Dict = task_reader.get_read_tasks()
 
-    translator: AbstractTranslator = FromAnyToDecimal()
+    translators = {1: FromDecimalToAny(),
+                   2: FromAnyToDecimal(),
+                   3: FromAnyToAny()}
+
+    translator: AbstractTranslator = translators[task_number]
     for variant_value in tasks.values():
-        actual_task: list = variant_value[2]
+        actual_task: list = variant_value[task_number]
 
         translator.translate(*actual_task)
         # print(*actual_task)
