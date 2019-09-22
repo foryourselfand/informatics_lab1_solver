@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 from os import listdir
 
-from config import tasks_dir_base
+from config import input_tasks_dir_base
 
 
 class AbstractTaskNamesGetter(ABC):
@@ -25,7 +25,7 @@ class BasicTaskNamesGetter(AbstractTaskNamesGetter):
 
 class DirectoryTaskNamesGetter(AbstractTaskNamesGetter):
     def __create_task_names__(self, task_names):
-        full_task_names: List = listdir(tasks_dir_base)
+        full_task_names: List = listdir(input_tasks_dir_base)
         short_task_names: List = [task_name[:-4] for task_name in full_task_names]
         task_names += reversed(short_task_names)
 
