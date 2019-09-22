@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 class AbstractTranslator(ABC):
     @abstractmethod
-    def translate(self, number, from_num_sys, to_num_sys):
+    def translate(self, input_number, input_from_num_sys, input_to_num_sys):
         pass
 
     @staticmethod
@@ -15,11 +15,11 @@ class AbstractTranslator(ABC):
 
 
 class FromDecimalToAny(AbstractTranslator):
-    def translate(self, number, from_num_sys, to_num_sys):
-        print("%s(%s) = ?(%s)" % (number, from_num_sys, to_num_sys))
-        number = int(number)
-        from_num_sys = int(from_num_sys)
-        to_num_sys = int(to_num_sys)
+    def translate(self, input_number, input_from_num_sys, input_to_num_sys):
+        print("%s(%s) = ?(%s)" % (input_number, input_from_num_sys, input_to_num_sys))
+        number = int(input_number)
+        from_num_sys = int(input_from_num_sys)
+        to_num_sys = int(input_to_num_sys)
 
         mods = []
         while number > 0:
@@ -29,8 +29,16 @@ class FromDecimalToAny(AbstractTranslator):
                 letter = self.digit_to_letter(mod)
                 print(" | {:s}".format(letter))
             else:
+                letter = mod
                 print()
+            mods.append(letter)
             number = div
+
+        reversed_mods = mods[::-1]
+        str_reversed_mods = [str(item) for item in reversed_mods]
+        result_number = "".join(str_reversed_mods)
+
+        print("{0}({1}) = {2}({3})".format(input_number, input_from_num_sys, result_number, input_to_num_sys))
         print()
 
 
