@@ -6,8 +6,22 @@ from sys import argv
 
 
 class AbstractTranslator(ABC):
-    @abstractmethod
     def translate(self, input_number, from_num_sys, to_num_sys):
+        self.__print_template(input_number, from_num_sys, "?", to_num_sys)
+
+        result_number = self.__actual_translate__(input_number, from_num_sys, to_num_sys)
+
+        self.__print_template(input_number, from_num_sys, result_number, to_num_sys)
+        print()
+
+        return result_number
+
+    @staticmethod
+    def __print_template(input_number, from_num_sys, result_number, to_num_sys):
+        print(f"{input_number}({from_num_sys}) = {result_number}({to_num_sys})")
+
+    @abstractmethod
+    def __actual_translate__(self, input_number, from_num_sys, to_num_sys):
         pass
 
     @staticmethod
@@ -16,16 +30,32 @@ class AbstractTranslator(ABC):
 
 
 class FromDecimalToAny(AbstractTranslator):
-    def translate(self, input_number, from_num_sys, to_num_sys):
-        print("%s(%s) = ?(%s)" % (input_number, from_num_sys, to_num_sys))
-        number = int(input_number)
+    def __actual_translate__(self, input_number, from_num_sys, to_num_sys):
+        number = str(input_number)
         from_num_sys = int(from_num_sys)
         to_num_sys = int(to_num_sys)
+
+        number_split = number.split(',')
+        whole_part = int(number_split[0])
+
+        whole_part_result = self.translate_whole_part(whole_part, from_num_sys, to_num_sys)
+        result_number = whole_part_result
+
+        if len(number_split) == 2:
+            fractional_part = int(number_split[1])
+            fractional_part_result = self.translate_fractional_part(fractional_part, from_num_sys, to_num_sys)
+
+            result_number += fractional_part_result
+
+        return result_number
+
+    def translate_whole_part(self, whole_part, from_num_sys, to_num_sys):
+        number = whole_part
 
         mods = []
         while number > 0:
             div, mod = divmod(number, to_num_sys)
-            print("{:{}d} / {:d} = {:{}d} | {:d}".format(number, 5, to_num_sys, div, 5, mod), end='')
+            print("{:{}d} / {:d} = {:{}d} | {:d}".format(number, 6, to_num_sys, div, 6, mod), end='')
             if mod >= 10:
                 letter = self.digit_to_letter(mod)
                 print(" | {:s}".format(letter))
@@ -37,16 +67,37 @@ class FromDecimalToAny(AbstractTranslator):
 
         reversed_mods = mods[::-1]
         str_reversed_mods = [str(item) for item in reversed_mods]
-        result_number = "".join(str_reversed_mods)
+        result = "".join(str_reversed_mods)
 
-        print("{0}({1}) = {2}({3})".format(input_number, from_num_sys, result_number, to_num_sys))
-        print()
-        return result_number
+        return result
+
+    def translate_fractional_part(self, fractional_part, from_num_sys, to_num_sys):
+        number = float(f'0.{fractional_part}')
+
+        wholes = []
+        for i in range(5):
+            number *= to_num_sys
+
+            number_split = str(number).split('.')
+
+            temp_whole = number_split[0]
+            wholes.append(temp_whole)
+
+            remainder = number_split[1]
+            print("{:{}s} | {:{}s}".format(temp_whole, 5, remainder, 5))
+            if remainder == '0':
+                break
+            number = float(f'0.{remainder}')
+
+        str_result = "".join(wholes)
+        result = f'0.{str_result}'
+        print(result)
+
+        return result
 
 
 class FromAnyToDecimal(AbstractTranslator):
-    def translate(self, input_number, from_num_sys, to_num_sys):
-        print("%s(%s) = ?(%s)" % (input_number, from_num_sys, to_num_sys))
+    def __actual_translate__(self, input_number, from_num_sys, to_num_sys):
 
         number = str(input_number)
         from_num_sys = int(from_num_sys)
@@ -82,8 +133,6 @@ class FromAnyToDecimal(AbstractTranslator):
         result_number = sum(eval_terms)
         print(result_number)
 
-        print("{0}({1}) = {2}({3})".format(input_number, from_num_sys, result_number, to_num_sys))
-        print()
         return result_number
 
     @staticmethod
@@ -117,8 +166,7 @@ class FromAnyToDecimal(AbstractTranslator):
 
 
 class FromAnyToAny(AbstractTranslator):
-    def translate(self, input_number, from_num_sys, to_num_sys):
-        print("%s(%s) = ?(%s)" % (input_number, from_num_sys, to_num_sys))
+    def __actual_translate__(self, input_number, from_num_sys, to_num_sys):
         number = str(input_number)
         from_num_sys = int(from_num_sys)
         to_num_sys = int(to_num_sys)
@@ -129,8 +177,6 @@ class FromAnyToAny(AbstractTranslator):
         from_decimal_to_any = FromDecimalToAny()
         result_number = from_decimal_to_any.translate(decimal_number, 10, to_num_sys)
 
-        print("{0}({1}) = {2}({3})".format(input_number, from_num_sys, result_number, to_num_sys))
-        print()
         return result_number
 
 
@@ -142,9 +188,11 @@ def main():
 
     translators = {1: FromDecimalToAny(),
                    2: FromAnyToDecimal(),
-                   3: FromAnyToAny()}
+                   3: FromAnyToAny(),
+                   4: FromDecimalToAny()}
 
     translator: AbstractTranslator = translators[task_number]
+    # translator.translate('1,8125', 10, 2)
     for variant_value in tasks.values():
         actual_task: list = variant_value[task_number]
 
