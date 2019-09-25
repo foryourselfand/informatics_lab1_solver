@@ -49,7 +49,7 @@ class FromDecimalToAny(AbstractTranslator):
             whole_result = whole_translator.translate(whole_input, from_num_sys, to_num_sys)
             fractional_result = fractional_translator.translate(fractional_input, from_num_sys, to_num_sys)
 
-            result_number = whole_result + fractional_result
+            result_number = whole_result + fractional_result[1:]
             format_str = '{}({from_ns}) = {}({from_ns}) + {}({from_ns}) = {}({to_ns}) + {}({to_ns}) = {}({to_ns})'
             print(format_str.format(input_number,
                                     whole_input, fractional_input,
@@ -80,9 +80,9 @@ class FromDecimalToAnyWhole(AbstractTranslator):
 
         reversed_mods = mods[::-1]
         str_reversed_mods = [str(item) for item in reversed_mods]
-        result = ''.join(str_reversed_mods)
+        str_result = ''.join(str_reversed_mods)
 
-        return result
+        return str_result
 
 
 class FromDecimalToAnyFractional(AbstractTranslator):
@@ -106,9 +106,10 @@ class FromDecimalToAnyFractional(AbstractTranslator):
             number = float(f'0.{remainder}')
 
         str_result = ''.join(wholes)
-        result = f'0.{str_result}'
+        float_result = float(f'0.{str_result}')
+        format_result = '{:.5f}'.format(float_result)
 
-        return result
+        return format_result
 
 
 class FromAnyToDecimal(AbstractTranslator):
