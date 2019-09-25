@@ -90,17 +90,17 @@ class FromDecimalToAnyFractional(AbstractTranslator):
         # number = float(f'0.{input_number}')
         number = input_number
 
+        whole_and_reminder = str(input_number).split('.')
+        self.beauty_print(whole_and_reminder[0], whole_and_reminder[1], to_num_sys, True)
         wholes = []
         for i in range(5):
             number *= to_num_sys
 
             number_split = str(number).split('.')
-
             temp_whole = number_split[0]
-            wholes.append(temp_whole)
-
             remainder = number_split[1]
-            print('{:{}s} | {:{}s}'.format(temp_whole, 5, remainder, 5))
+            self.beauty_print(temp_whole, remainder, to_num_sys)
+            wholes.append(temp_whole)
             if remainder == '0':
                 break
             number = float(f'0.{remainder}')
@@ -110,6 +110,16 @@ class FromDecimalToAnyFractional(AbstractTranslator):
         format_result = '{:.5f}'.format(float_result)
 
         return format_result
+
+    @staticmethod
+    def beauty_print(temp_whole, remainder, to_num_sys, hide=False):
+        if hide:
+            temp_whole = f'({temp_whole})'
+        whole_part = '{:^{}s}|'.format(temp_whole, 3)
+        whole_and_reminder = '{} {:{}s}'.format(whole_part, remainder, 2)
+        print(whole_and_reminder)
+        print('{:>{}} {}'.format('|', len(whole_part), to_num_sys))
+        print('—' * len(whole_and_reminder))
 
 
 class FromAnyToDecimal(AbstractTranslator):
