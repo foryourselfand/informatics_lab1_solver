@@ -215,7 +215,7 @@ class ShortTranslator(AbstractTranslator, ABC):
         self.res_to_base_tables: Dict[int, Dict[str, str]] = self.get_res_to_base_table(self.base_to_res_tables)
 
         pprint(self.base_to_res_tables)
-        pprint(self.res_to_base_tables)
+        # pprint(self.res_to_base_tables)
 
     def get_base_table(self, base: int = 2, power: int = 4):
         table: Dict[str: str] = dict()
@@ -259,10 +259,110 @@ class ShortTranslator(AbstractTranslator, ABC):
                 table[key][rez] = base
         return table
 
+    def get_power(self, small_number: int, big_number: int):
+        result = 1
+        while big_number != small_number:
+            big_number = big_number // small_number
+            result += 1
+        return result
+
+    def remove_leading_zeroes(self, number: str, from_end: bool = False):
+        if from_end:
+            number = number[::-1]
+
+        zero_flag = True
+        result_number = []
+        for char in number:
+            if char != '0' and zero_flag:
+                zero_flag = False
+            if not zero_flag:
+                result_number.append(char)
+
+        if from_end:
+            result_number = result_number[::-1]
+
+        result = ''.join(result_number)
+        return result
+
+    def add_leading_zeros(self, number: str, power: int, from_end: bool = True):
+        missing_count = power - (len(number) % power)
+        missing_zeroes = '0' * missing_count
+        if from_end:
+            return number + missing_zeroes
+        else:
+            return missing_zeroes + number
+
 
 class FromBigToSmallShort(ShortTranslator):
     def __actual_translate__(self, input_number, from_num_sys, to_num_sys):
-        self.
+        number = str(input_number)
+        from_num_sys = int(from_num_sys)
+        to_num_sys = int(to_num_sys)
+
+        power = self.get_power(to_num_sys, from_num_sys)
+        print(f"{from_num_sys} = {to_num_sys}^{power}")
+
+        in_whole, in_remainder = number.split(',')
+
+        out_whole = self.detailed_print(in_whole, from_num_sys, to_num_sys)
+        out_remainder = self.detailed_print(in_remainder, from_num_sys, to_num_sys, True)
+        result = "{},{:.5}".format(out_whole, out_remainder)
+
+        return result
+
+    def detailed_print(self, number, from_num_sys, to_num_sys, from_end: bool = False):
+        in_full = f'{number}({from_num_sys})'
+        in_spaces = ' '.join(number)
+        outs = []
+        for char in number:
+            outs.append(self.res_to_base_tables[from_num_sys][char])
+        out_with_spaces = ' '.join(outs)
+        out_without_spaces = ''.join(outs)
+        out_without_leading_zeroes = self.remove_leading_zeroes(out_without_spaces, from_end)
+        out_full = f'{out_without_leading_zeroes}({to_num_sys})'
+
+        print(' = '.join([in_full, in_spaces, out_with_spaces, out_full]))
+
+        return out_without_leading_zeroes
+
+
+class FromSmallToBigShort(ShortTranslator):
+    def __actual_translate__(self, input_number, from_num_sys, to_num_sys):
+        number = str(input_number)
+        from_num_sys = int(from_num_sys)
+        to_num_sys = int(to_num_sys)
+
+        power = self.get_power(from_num_sys, to_num_sys)
+        print(f"{to_num_sys} = {from_num_sys}^{power}")
+
+        in_whole, in_remainder = number.split(',')
+        out_whole = self.detailed_print(in_whole, from_num_sys, to_num_sys, power, False)
+        out_remainder = self.detailed_print(in_remainder, from_num_sys, to_num_sys, power, True)
+
+    def detailed_print(self, number, from_num_sys, to_num_sys, power: int, from_end: bool = True):
+        in_full = f'{number}({from_num_sys})'
+        in_with_leading_zeroes = self.add_leading_zeros(number, power, from_end)
+
+        wanted_parts = len(in_with_leading_zeroes) // power
+        ins_with_spaces = self.split_list(in_with_leading_zeroes, wanted_parts)
+        in_with_spaces = ' '.join(ins_with_spaces)
+
+        outs = []
+        for elem in ins_with_spaces:
+            outs.append(self.base_to_res_tables[to_num_sys][elem])
+        out_with_spaces = ' '.join(outs)
+        out_without_spaces = ''.join(outs)
+        out_full = f'{out_without_spaces}({to_num_sys})'
+
+        print(' = '.join([in_full, in_with_spaces, out_with_spaces, out_full]))
+
+        return out_without_spaces
+
+    @staticmethod
+    def split_list(wanted_list, wanted_parts=1):
+        length = len(wanted_list)
+        return [wanted_list[i * length // wanted_parts: (i + 1) * length // wanted_parts]
+                for i in range(wanted_parts)]
 
 
 def main():
@@ -275,7 +375,9 @@ def main():
                    2: FromAnyToDecimal(),
                    3: FromAnyToAny(),
                    4: FromDecimalToAny(),
-                   5: FromBigToSmallShort()}
+                   5: FromBigToSmallShort(),
+                   6: FromBigToSmallShort(),
+                   7: FromSmallToBigShort()}
 
     translator: AbstractTranslator = translators[task_number]
     for variant_value in tasks.values():
