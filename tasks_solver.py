@@ -3,6 +3,7 @@ from typing import Dict
 from pprint import pprint
 from abc import ABC, abstractmethod
 from sys import argv
+from math import log
 
 
 class AbstractTranslator(ABC):
@@ -259,12 +260,13 @@ class ShortTranslator(AbstractTranslator, ABC):
                 table[key][rez] = base
         return table
 
-    def get_power(self, small_number: int, big_number: int):
-        result = 1
-        while big_number != small_number:
-            big_number = big_number // small_number
-            result += 1
-        return result
+    def get_and_print_power(self, first: int, second: int):
+        max_n = max(first, second)
+        min_n = min(first, second)
+        power = int(log(max_n, min_n))
+        print(f"{max_n} = {min_n}^{power}")
+
+        return power
 
     def remove_leading_zeroes(self, number: str, from_end: bool = False):
         if from_end:
@@ -299,8 +301,7 @@ class FromBigToSmallShort(ShortTranslator):
         from_num_sys = int(from_num_sys)
         to_num_sys = int(to_num_sys)
 
-        power = self.get_power(to_num_sys, from_num_sys)
-        print(f"{from_num_sys} = {to_num_sys}^{power}")
+        power = self.get_and_print_power(to_num_sys, from_num_sys)
 
         in_whole, in_remainder = number.split(',')
 
@@ -332,12 +333,14 @@ class FromSmallToBigShort(ShortTranslator):
         from_num_sys = int(from_num_sys)
         to_num_sys = int(to_num_sys)
 
-        power = self.get_power(from_num_sys, to_num_sys)
-        print(f"{to_num_sys} = {from_num_sys}^{power}")
+        power = self.get_and_print_power(from_num_sys, to_num_sys)
 
         in_whole, in_remainder = number.split(',')
         out_whole = self.detailed_print(in_whole, from_num_sys, to_num_sys, power, False)
         out_remainder = self.detailed_print(in_remainder, from_num_sys, to_num_sys, power, True)
+        result = "{},{:.5}".format(out_whole, out_remainder)
+
+        return result
 
     def detailed_print(self, number, from_num_sys, to_num_sys, power: int, from_end: bool = True):
         in_full = f'{number}({from_num_sys})'
