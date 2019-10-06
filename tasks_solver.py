@@ -286,7 +286,7 @@ class ShortTranslator(AbstractTranslator, ABC):
         result = ''.join(result_number)
         return result
 
-    def add_leading_zeros(self, number: str, power: int, from_end: bool = True):
+    def add_leading_zeros(self, number: str, power: int, from_end: bool = False):
         missing_count = power - (len(number) % power)
         missing_zeroes = '0' * missing_count
         if from_end:
@@ -305,24 +305,27 @@ class FromBigToSmallShort(ShortTranslator):
 
         in_whole, in_remainder = number.split(',')
 
-        out_whole = self.detailed_print(in_whole, from_num_sys, to_num_sys)
+        out_whole = self.detailed_print(in_whole, from_num_sys, to_num_sys, False)
         out_remainder = self.detailed_print(in_remainder, from_num_sys, to_num_sys, True)
         result = "{},{:.5}".format(out_whole, out_remainder)
 
         return result
 
-    def detailed_print(self, number, from_num_sys, to_num_sys, from_end: bool = False):
+    def detailed_print(self, number, from_num_sys, to_num_sys, from_end):
         in_full = f'{number}({from_num_sys})'
-        in_spaces = ' '.join(number)
+        in_with_spaces = ' '.join(number)
+
         outs = []
-        for char in number:
-            outs.append(self.res_to_base_tables[from_num_sys][char])
+        for elem in number:
+            outs.append(self.res_to_base_tables[from_num_sys][elem])
+
         out_with_spaces = ' '.join(outs)
         out_without_spaces = ''.join(outs)
+
         out_without_leading_zeroes = self.remove_leading_zeroes(out_without_spaces, from_end)
         out_full = f'{out_without_leading_zeroes}({to_num_sys})'
 
-        print(' = '.join([in_full, in_spaces, out_with_spaces, out_full]))
+        print(' = '.join([in_full, in_with_spaces, out_with_spaces, out_full]))
 
         return out_without_leading_zeroes
 
@@ -342,7 +345,7 @@ class FromSmallToBigShort(ShortTranslator):
 
         return result
 
-    def detailed_print(self, number, from_num_sys, to_num_sys, power: int, from_end: bool = True):
+    def detailed_print(self, number, from_num_sys, to_num_sys, power: int, from_end):
         in_full = f'{number}({from_num_sys})'
         in_with_leading_zeroes = self.add_leading_zeros(number, power, from_end)
 
@@ -353,8 +356,10 @@ class FromSmallToBigShort(ShortTranslator):
         outs = []
         for elem in ins_with_spaces:
             outs.append(self.base_to_res_tables[to_num_sys][elem])
+
         out_with_spaces = ' '.join(outs)
         out_without_spaces = ''.join(outs)
+
         out_full = f'{out_without_spaces}({to_num_sys})'
 
         print(' = '.join([in_full, in_with_spaces, out_with_spaces, out_full]))
