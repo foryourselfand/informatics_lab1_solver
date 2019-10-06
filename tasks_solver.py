@@ -25,7 +25,14 @@ class AbstractTranslator(ABC):
 
     @staticmethod
     def digit_to_letter(digit):
-        return chr(ord('A') + digit - 10)
+        if 0 <= digit <= 9:
+            return str(digit)
+        else:
+            return chr(ord('A') + digit - 10)
+
+    @staticmethod
+    def letter_to_digit(letter: str):
+        return ord(letter) - ord('A') + 10
 
 
 class FromDecimalToAny(AbstractTranslator):
@@ -186,10 +193,6 @@ class FromAnyToDecimal(AbstractTranslator):
         expression = ' + '.join(terms)
         return terms, expression
 
-    @staticmethod
-    def letter_to_digit(letter: str):
-        return ord(letter) - ord('A') + 10
-
 
 class FromAnyToAny(AbstractTranslator):
     def __actual_translate__(self, input_number, from_num_sys, to_num_sys):
@@ -206,6 +209,62 @@ class FromAnyToAny(AbstractTranslator):
         return result_number
 
 
+class ShortTranslator(AbstractTranslator, ABC):
+    def __init__(self):
+        self.base_to_res_tables: Dict[int, Dict[str, str]] = self.get_base_to_res_table()
+        self.res_to_base_tables: Dict[int, Dict[str, str]] = self.get_res_to_base_table(self.base_to_res_tables)
+
+        pprint(self.base_to_res_tables)
+        pprint(self.res_to_base_tables)
+
+    def get_base_table(self, base: int = 2, power: int = 4):
+        table: Dict[str: str] = dict()
+        for i in range(base ** power):
+            row = []
+            for j in range(power - 1, -1, -1):
+                temp = ((i // (base ** j)) % base)
+                row.append(str(temp))
+
+            key = ''.join(row)
+            value = self.digit_to_letter(i)
+
+            table[key] = value
+        return table
+
+    @staticmethod
+    def get_shorted_table(base_table: Dict[str, str], base: int = 2, power: int = 4):
+        new_table: Dict[str, str] = dict()
+        for index, item in enumerate(base_table.items()):
+            if index == base ** power:
+                break
+            old_key = item[0]
+            value = item[1]
+
+            new_key = old_key[len(old_key) - power:]
+            new_table[new_key] = value
+        return new_table
+
+    def get_base_to_res_table(self, base: int = 2, power: int = 4):
+        table: Dict[int, Dict[str, str]] = dict()
+        table[base ** power] = self.get_base_table()
+        for i in range(power - 1, 1, -1):
+            table[base ** i] = self.get_shorted_table(table[base ** power], base=base, power=i)
+        return table
+
+    def get_res_to_base_table(self, base_table):
+        table: Dict[int, Dict[str, str]] = dict()
+        for key, base_to_res in base_table.items():
+            table[key] = dict()
+            for base, rez in base_to_res.items():
+                table[key][rez] = base
+        return table
+
+
+class FromBigToSmallShort(ShortTranslator):
+    def __actual_translate__(self, input_number, from_num_sys, to_num_sys):
+        self.
+
+
 def main():
     task_number = int(argv[1]) if len(argv) == 2 else 1
 
@@ -215,7 +274,8 @@ def main():
     translators = {1: FromDecimalToAny(),
                    2: FromAnyToDecimal(),
                    3: FromAnyToAny(),
-                   4: FromDecimalToAny()}
+                   4: FromDecimalToAny(),
+                   5: FromBigToSmallShort()}
 
     translator: AbstractTranslator = translators[task_number]
     for variant_value in tasks.values():
