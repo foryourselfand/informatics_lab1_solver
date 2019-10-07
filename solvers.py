@@ -137,6 +137,14 @@ class FromAnyToDecimal(AbstractTranslator):
         from_num_sys = int(from_num_sys)
         to_num_sys = int(to_num_sys)
 
+        dot_index = number.find(',')
+        _, iter_start, iter_end = self.get_iter_number_start_end(number)
+        for index, power in enumerate(range(iter_start, iter_end, -1)):
+            if index == dot_index:
+                print(' ', end='')
+            print(abs(power), end='')
+        print(' <- exponents')
+
         print(input_number, end=' ')
         for run_flag in [False, True]:
             terms, expression = self.get_terms_expression_and_letter_flag(number, from_num_sys, run_flag)
@@ -167,17 +175,38 @@ class FromAnyToDecimal(AbstractTranslator):
         result_number = sum(eval_terms)
         print(result_number)
 
+        result_number = round(result_number, 5)
         return result_number
 
     @staticmethod
     def print_with_equality(expression: str, end='\n'):
         print('= %s =' % expression, end=end)
 
+    def get_iter_number_start_end(self, number):
+        split_number = number.split(',')
+        if len(split_number) == 2:
+            iter_number = split_number[0] + split_number[1]
+
+            iter_start = len(split_number[0]) - 1
+            iter_end = -(len(split_number[1]) + 1)
+        else:
+            iter_number = number
+
+            iter_start = len(number) - 1
+            iter_end = -1
+        return iter_number, iter_start, iter_end
+
     def get_terms_expression_and_letter_flag(self, number, from_num_sys, second_run=False):
         terms = []
-        for digit, index in zip(number, range(len(number) - 1, -1, -1)):
-            small_term = '^%d' % index
-            big_term = '* %d%s' % (from_num_sys, small_term)
+
+        iter_number, iter_start, iter_end = self.get_iter_number_start_end(number)
+
+        for digit, index in zip(iter_number, range(iter_start, iter_end, -1)):
+            if index < 0:
+                small_term = '^(%d)' % index
+            else:
+                small_term = '^%d' % index
+            big_term = ' * %d%s' % (from_num_sys, small_term)
 
             if second_run:
                 if digit.isalpha():
@@ -187,9 +216,9 @@ class FromAnyToDecimal(AbstractTranslator):
                 if index == 0:
                     big_term = ''
                 if index == 1:
-                    big_term = '* %d' % from_num_sys
+                    big_term = ' * %d' % from_num_sys
 
-            full_term = '%s %s' % (digit, big_term)
+            full_term = '%s%s' % (digit, big_term)
             terms.append(full_term)
         expression = ' + '.join(terms)
         return terms, expression
@@ -215,7 +244,7 @@ class ShortTranslator(AbstractTranslator, ABC):
         self.base_to_res_tables: Dict[int, Dict[str, str]] = self.get_base_to_res_table()
         self.res_to_base_tables: Dict[int, Dict[str, str]] = self.get_res_to_base_table(self.base_to_res_tables)
 
-        pprint(self.base_to_res_tables)
+        # pprint(self.base_to_res_tables)
         # pprint(self.res_to_base_tables)
 
     def get_base_table(self, base: int = 2, power: int = 4):
@@ -373,27 +402,20 @@ class FromSmallToBigShort(ShortTranslator):
                 for i in range(wanted_parts)]
 
 
-def main():
-    task_number = int(argv[1]) if len(argv) == 2 else 1
-
+def get_tasks() -> Dict:
     task_reader: AbstractTaskReader = EasyTaskReader()
     tasks: Dict = task_reader.get_read_tasks()
+    return tasks
 
+
+def get_translators() -> Dict[int, AbstractTranslator]:
     translators = {1: FromDecimalToAny(),
                    2: FromAnyToDecimal(),
                    3: FromAnyToAny(),
                    4: FromDecimalToAny(),
                    5: FromBigToSmallShort(),
                    6: FromBigToSmallShort(),
-                   7: FromSmallToBigShort()}
-
-    translator: AbstractTranslator = translators[task_number]
-    for variant_value in tasks.values():
-        actual_task: list = variant_value[task_number]
-
-        translator.translate(*actual_task)
-        print()
-
-
-if __name__ == '__main__':
-    main()
+                   7: FromSmallToBigShort(),
+                   8: FromAnyToDecimal(),
+                   9: FromAnyToDecimal()}
+    return translators
