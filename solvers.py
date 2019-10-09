@@ -1,5 +1,5 @@
 from task_content_io import AbstractTaskReader, EasyTaskReader
-from typing import Dict
+from typing import Dict, List
 from pprint import pprint
 from abc import ABC, abstractmethod
 from sys import argv
@@ -239,13 +239,22 @@ class FromAnyToAny(AbstractTranslator):
         return result_number
 
 
-class ShortTranslator(AbstractTranslator, ABC):
+class PrintWatcher:
     def __init__(self):
+        self.remembered: List[int] = list()
+
+    def print_table(self, table_dict, table_key):
+        if table_key not in self.remembered:
+            for key, value in table_dict[table_key].items():
+                print(key, value)
+            self.remembered.append(table_key)
+
+
+class ShortTranslator(AbstractTranslator, ABC):
+    def __init__(self, print_watcher: PrintWatcher):
         self.base_to_res_tables: Dict[int, Dict[str, str]] = self.get_base_to_res_table()
         self.res_to_base_tables: Dict[int, Dict[str, str]] = self.get_res_to_base_table(self.base_to_res_tables)
-
-        # pprint(self.base_to_res_tables)
-        # pprint(self.res_to_base_tables)
+        self.print_watcher = print_watcher
 
     def get_base_table(self, base: int = 2, power: int = 4):
         table: Dict[str: str] = dict()
@@ -331,6 +340,7 @@ class FromBigToSmallShort(ShortTranslator):
         to_num_sys = int(to_num_sys)
 
         power = self.get_and_print_power(to_num_sys, from_num_sys)
+        self.print_watcher.print_table(self.base_to_res_tables, from_num_sys)
 
         in_whole, in_remainder = number.split(',')
 
@@ -366,6 +376,7 @@ class FromSmallToBigShort(ShortTranslator):
         to_num_sys = int(to_num_sys)
 
         power = self.get_and_print_power(from_num_sys, to_num_sys)
+        self.print_watcher.print_table(self.base_to_res_tables, to_num_sys)
 
         in_whole, in_remainder = number.split(',')
         out_whole = self.detailed_print(in_whole, from_num_sys, to_num_sys, power, False)
@@ -409,13 +420,15 @@ def get_tasks() -> Dict:
 
 
 def get_translators() -> Dict[int, AbstractTranslator]:
+    print_whatcher = PrintWatcher()
+
     translators = {1: FromDecimalToAny(),
                    2: FromAnyToDecimal(),
                    3: FromAnyToAny(),
                    4: FromDecimalToAny(),
-                   5: FromBigToSmallShort(),
-                   6: FromBigToSmallShort(),
-                   7: FromSmallToBigShort(),
+                   5: FromBigToSmallShort(print_whatcher),
+                   6: FromBigToSmallShort(print_whatcher),
+                   7: FromSmallToBigShort(print_whatcher),
                    8: FromAnyToDecimal(),
                    9: FromAnyToDecimal()}
     return translators
