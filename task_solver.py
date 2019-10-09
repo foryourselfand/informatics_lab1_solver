@@ -9,7 +9,8 @@ def main():
     translators = get_translators()
 
     translator: AbstractTranslator = translators[task_number]
-    for variant_value in tasks.values():
+    for variant_number, variant_value in enumerate(tasks.values()):
+        print(f'Variant #{variant_number + 1}')
         actual_task: list = variant_value[task_number]
 
         translator.translate(*actual_task)

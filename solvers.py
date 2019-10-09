@@ -160,6 +160,8 @@ class FromAnyToDecimal(AbstractTranslator):
                 continue
             power_str = split_term[-1]
             power_eval = eval(power_str)
+            if power_eval < 0:
+                power_eval = f'({power_eval})'
             temp_term_list = split_term[:-1] + [str(power_eval)]
             term_term = ' '.join(temp_term_list)
             short_terms.append(term_term)
@@ -167,7 +169,7 @@ class FromAnyToDecimal(AbstractTranslator):
         self.print_with_equality(short_expression)
 
         eval_terms = [eval(term) for term in short_terms]
-        str_eval_terms = [str(term) for term in eval_terms]
+        str_eval_terms = [str(term) if term >= 0 else str(f'({term})') for term in eval_terms]
 
         middle_expression = ' + '.join(str_eval_terms)
         self.print_with_equality(middle_expression, end=' ')
@@ -202,11 +204,15 @@ class FromAnyToDecimal(AbstractTranslator):
         iter_number, iter_start, iter_end = self.get_iter_number_start_end(number)
 
         for digit, index in zip(iter_number, range(iter_start, iter_end, -1)):
+            small_term_brackets = '', ''
             if index < 0:
-                small_term = '^(%d)' % index
-            else:
-                small_term = '^%d' % index
-            big_term = ' * %d%s' % (from_num_sys, small_term)
+                small_term_brackets = '(', ')'
+            small_term = f'^{small_term_brackets[0]}{index}{small_term_brackets[1]}'
+
+            big_term_brackets = '', ''
+            if from_num_sys <= 0:
+                big_term_brackets = '(', ')'
+            big_term = f' * {big_term_brackets[0]}{from_num_sys}{big_term_brackets[1]}{small_term}'
 
             if second_run:
                 if digit.isalpha():
@@ -216,7 +222,7 @@ class FromAnyToDecimal(AbstractTranslator):
                 if index == 0:
                     big_term = ''
                 if index == 1:
-                    big_term = ' * %d' % from_num_sys
+                    big_term = f' * {big_term_brackets[0]}{from_num_sys}{big_term_brackets[1]}'
 
             full_term = '%s%s' % (digit, big_term)
             terms.append(full_term)
@@ -432,3 +438,20 @@ def get_translators() -> Dict[int, AbstractTranslator]:
                    8: FromAnyToDecimal(),
                    9: FromAnyToDecimal()}
     return translators
+
+
+def temp_f():
+    # translator = FromDecimalToAny()
+    #
+    # for number in [121, 13, 10, 2018, 5]:
+    #     answer = translator.translate(number, 10, 2)
+    #     print()
+
+    translator = FromAnyToDecimal()
+    for number in [15, 532, 123, 58]:
+        translator.translate(number, -10, 10)
+        print()
+
+
+if __name__ == '__main__':
+    temp_f()
