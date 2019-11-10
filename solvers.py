@@ -85,6 +85,8 @@ class FromDecimalToAnyWhole(AbstractTranslator):
                 print()
             mods.append(letter)
             number = div
+        if len(mods) == 0:
+            mods = [0]
 
         reversed_mods = mods[::-1]
         str_reversed_mods = [str(item) for item in reversed_mods]
@@ -106,27 +108,36 @@ class FromDecimalToAnyFractional(AbstractTranslator):
 
             number_split = str(number).split('.')
             temp_whole = number_split[0]
+            temp_whole_letter = AbstractTranslator.digit_to_letter(int(temp_whole))
             remainder = number_split[1]
             self.beauty_print(temp_whole, remainder, to_num_sys)
-            wholes.append(temp_whole)
+            wholes.append(temp_whole_letter)
             if remainder == '0':
                 break
             number = float(f'0.{remainder}')
 
         str_result = ''.join(wholes)
-        float_result = float(f'0.{str_result}')
-        format_result = '{:.5f}'.format(float_result)
+        float_result = f'0.{str_result}'
+        # format_result = '{:.5f}'.format(float_result)
 
-        return format_result
+        return float_result
+        # return format_result
 
     @staticmethod
     def beauty_print(temp_whole, remainder, to_num_sys, hide=False):
-        if hide:
+        temp_whole_letter = AbstractTranslator.digit_to_letter(int(temp_whole))
+        if hide or temp_whole != temp_whole_letter:
             temp_whole = f'({temp_whole})'
-        whole_part = '{:^{}s}|'.format(temp_whole, 3)
-        whole_and_reminder = '{} {:{}s}'.format(whole_part, remainder, 2)
+        whole_part = '{:^{}s}|'.format(temp_whole, 4)
+        whole_and_reminder = '{} {:{}s}'.format(whole_part, remainder, 3)
+
+        whole_part_letter = '{:>{}}'.format('|', len(whole_part))
+        if temp_whole != temp_whole_letter:
+            whole_part_letter = '{:^{}s}|'.format(temp_whole_letter, 4)
+        whole_and_reminder_letter = '{} {}'.format(whole_part_letter, to_num_sys)
+
         print(whole_and_reminder)
-        print('{:>{}} {}'.format('|', len(whole_part), to_num_sys))
+        print(whole_and_reminder_letter)
         print('—' * len(whole_and_reminder))
 
 
@@ -440,18 +451,6 @@ def get_translators() -> Dict[int, AbstractTranslator]:
     return translators
 
 
-def temp_f():
-    # translator = FromDecimalToAny()
-    #
-    # for number in [121, 13, 10, 2018, 5]:
-    #     answer = translator.translate(number, 10, 2)
-    #     print()
-
-    translator = FromAnyToDecimal()
-    for number in [15, 532, 123, 58]:
-        translator.translate(number, -10, 10)
-        print()
-
-
 if __name__ == '__main__':
-    temp_f()
+    translator = FromDecimalToAny()
+    translator.translate('0,0025', 10, 16)
